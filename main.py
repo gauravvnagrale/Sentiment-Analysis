@@ -15,6 +15,7 @@ def pre_processing(sentence):
     pattern = re.compile('http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+')
     sentence = pattern.sub('',sentence)
     sentence = re.split('[^a-zA-Z\']', sentence)
+    
     return sentence
 
 #calculate probability of a word for a category
@@ -22,9 +23,34 @@ def calc_prob(word, category):
     
     if word not in feature_set or word not in dataset[category]:
         
-        return 0
+        return float(1/no_of_items[category])
     
-    return float(dataset[category][word])/no_of_items[category]
+    return float(dataset[category][word] + 1)/no_of_items[category]
+
+def sentence_prob(test, category):
+    
+    spl_data = pre_processing(test)
+    sp = 1
+    
+    for i in spl_data:
+        
+        if len(i) > 2:
+            
+            sp *= calc_prob(i.lower(),category)
+            
+    return sp
+
+def naive_bayes_classifier(test):
+    
+    results = {}
+    
+    for i in dataset.keys():
+        
+        cat_prob = float(no_of_items[i]) / sum(no_of_items.values())
+        test_prob = sentence_prob(test, i)
+        results[i] = test_prob * cat_prob
+        
+    return results
 
 if __name__ == '__main__':
     
